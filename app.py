@@ -1,7 +1,3 @@
-"""
-app.py — Streamlit frontend for the Emergency Exit Finder.
-Run with:  streamlit run app.py
-"""
 
 import streamlit as st
 import networkx as nx
@@ -12,14 +8,12 @@ from backend import Graph, PathFinder, parse_input_file, build_default_graph
 
 INT_MAX = math.inf
 
-# ─── Page config ──────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="Emergency Exit Finder",
     page_icon="🚨",
     layout="wide",
 )
 
-# ─── Custom CSS ───────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
   body { background-color: #0f0f0f; }
@@ -70,7 +64,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ─── Session state ─────────────────────────────────────────────────────────────
 if "graph" not in st.session_state:
     g, src, dst, ow = build_default_graph()
     st.session_state.graph           = g
@@ -78,10 +71,8 @@ if "graph" not in st.session_state:
     st.session_state.destination     = dst
     st.session_state.original_weights = ow
     st.session_state.blocked_edges   = []   # list of (u,v) currently blocked
-    st.session_state.fire_nodes      = []   # for highlight
-
-# ─── Helpers ──────────────────────────────────────────────────────────────────
-
+    st.session_state.fire_nodes      = []   
+    
 def graph_to_nx(graph: Graph, blocked: list, path_edges: list, emg_edges: list):
     G = nx.Graph()
     n = graph.get_number_of_nodes()
@@ -114,7 +105,6 @@ def draw_graph(graph: Graph, normal_result, emergency_result, blocked_edges, fir
     for u, v, w, is_blk in all_edges_raw:
         G.add_edge(u, v, weight=w, blocked=is_blk)
 
-    # Fixed layout — use spring but seed for stability
     pos = nx.spring_layout(G, seed=42, k=2.5)
 
     fig, ax = plt.subplots(figsize=(9, 6))
@@ -164,7 +154,7 @@ def draw_graph(graph: Graph, normal_result, emergency_result, blocked_edges, fir
                                  font_color="#94a3b8", font_size=9, ax=ax,
                                  bbox=dict(boxstyle="round,pad=0.2", fc="#0d0d1a", alpha=0.7, ec="none"))
 
-    # Node colours
+  
     src = st.session_state.source
     dst = st.session_state.destination
     node_colors = []
@@ -187,7 +177,7 @@ def draw_graph(graph: Graph, normal_result, emergency_result, blocked_edges, fir
                             font_color="white", font_size=8,
                             font_weight="bold", ax=ax)
 
-    # Legend
+
     legend_items = [
         mpatches.Patch(color="#22c55e",  label="Source"),
         mpatches.Patch(color="#a855f7",  label="Destination / EXIT"),
@@ -232,12 +222,11 @@ def render_path(result, graph: Graph, label: str, is_emergency: bool):
         )
 
 
-# ─── Sidebar ──────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("## ⚙️ Configuration")
     st.divider()
 
-    # Upload custom input.txt
+
     st.markdown("### 📂 Upload Building Map")
     uploaded = st.file_uploader("Upload input.txt", type=["txt"])
     if uploaded:
@@ -295,7 +284,7 @@ with st.sidebar:
             st.session_state.fire_nodes    = []
             st.rerun()
 
-# ─── Main content ──────────────────────────────────────────────────────────────
+
 st.markdown("# 🚨 Emergency Exit Finder")
 st.markdown("_Graph-based shortest path with real-time corridor blocking — powered by Dijkstra's algorithm_")
 st.divider()
@@ -304,14 +293,14 @@ graph = st.session_state.graph
 n     = graph.get_number_of_nodes()
 names = [graph.get_node_name(i) for i in range(n)]
 
-# ── Normal path (always computed) ─────────────────────────────────────────────
+#  Normal path 
 normal_result = PathFinder.find_shortest_path(
     graph,
     st.session_state.source,
     st.session_state.destination
 )
 
-# ── Emergency path (only if blockages exist) ──────────────────────────────────
+#  Emergency path 
 emergency_result = None
 if st.session_state.blocked_edges:
     emergency_result = PathFinder.find_shortest_path(
@@ -320,7 +309,6 @@ if st.session_state.blocked_edges:
         st.session_state.destination
     )
 
-# ─── Top metrics ──────────────────────────────────────────────────────────────
 col1, col2, col3, col4 = st.columns(4)
 with col1:
     val_cls = "safe" if normal_result.found() else "danger"
@@ -347,7 +335,6 @@ with col4:
 
 st.divider()
 
-# ─── Two-column layout: Graph | Controls + Paths ──────────────────────────────
 left, right = st.columns([3, 2], gap="large")
 
 with left:
@@ -363,7 +350,7 @@ with left:
     plt.close(fig)
 
 with right:
-    # ── Block a corridor ──────────────────────────────────────────────────────
+    #block corridor
     st.markdown("### 🔥 Simulate Fire / Block Corridor")
 
     edges = graph.get_all_edges()
@@ -379,7 +366,7 @@ with right:
             if key not in [(min(a, b), max(a, b)) for a, b in st.session_state.blocked_edges]:
                 graph.block_corridor(u, v)
                 st.session_state.blocked_edges.append((u, v))
-                # track fire nodes for red highlight
+                
                 for node in [u, v]:
                     if node not in st.session_state.fire_nodes:
                         st.session_state.fire_nodes.append(node)
@@ -391,7 +378,7 @@ with right:
 
     st.divider()
 
-    # ── Manual node input (mirrors original C++ stdin) ────────────────────────
+    
     st.markdown("### 🔢 Block by Node IDs")
     c1, c2 = st.columns(2)
     with c1:
@@ -420,7 +407,7 @@ with right:
 
     st.divider()
 
-    # ── Adjacency Matrix ──────────────────────────────────────────────────────
+    #Adjacency Matrix 
     with st.expander("🧮 Adjacency Matrix", expanded=False):
         import pandas as pd
         matrix_data = []
@@ -438,7 +425,7 @@ with right:
         df = pd.DataFrame(matrix_data, index=names, columns=names)
         st.dataframe(df, use_container_width=True)
 
-# ─── Path results ─────────────────────────────────────────────────────────────
+#Path
 st.divider()
 st.markdown("## 📍 Routing Results")
 
@@ -461,7 +448,7 @@ with path_col2:
     else:
         st.info("Block a corridor above to see the emergency re-routing.")
 
-# ─── Footer ───────────────────────────────────────────────────────────────────
+
 st.divider()
 st.markdown(
     "<center style='color:#555; font-size:13px;'>Emergency Exit Finder · "
