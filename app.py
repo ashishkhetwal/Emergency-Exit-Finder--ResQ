@@ -142,7 +142,7 @@ def draw_graph(graph: Graph, normal_result, emergency_result, blocked_edges, fir
         if key in blk_set:
             color, width, style, alpha = "#ef4444", 3.0, "dashed", 0.8
         elif key in emg_path_edges:
-            color, width, style, alpha = "#f97316", 3.5, "solid", 1.0
+            color, width, style, alpha = "#249F24", 3.5, "solid", 1.0
         elif key in norm_path_edges:
             color, width, style, alpha = "#3b82f6", 3.5, "solid", 1.0
         else:
