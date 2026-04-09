@@ -1,3 +1,4 @@
+#In this module we have found three paths one is the shortest path using Dijkstra's algorithm, other is using BFS and using DFS to show the difference between the paths of three algorithms.
 import heapq
 import math
 
@@ -80,15 +81,17 @@ class PathFinder:
         
         visited = []
         for i in range(vertices):
-            visited.append(False)
+            visited.append(0)
             
         parent = []
         for i in range(vertices):
             parent.append(-1)
         
         q = deque()
+        #Here we are appending a tuple containing source and number of hops.
         q.append((source, 0))
-        visited[source] = True
+
+        visited[source] = 1
         
         best_dest = -1
         while q:
@@ -104,8 +107,8 @@ class PathFinder:
             
             for i in range(vertices):
                 weight = graph.get_edge_weight(u, i)
-                if weight != 0 and weight != INT_MAX and visited[i] == False:
-                    visited[i] = True
+                if weight != 0 and weight != INT_MAX and visited[i] == 0:
+                    visited[i] = 1
                     parent[i] = u
                     q.append((i, hops + 1))
         
@@ -124,47 +127,51 @@ class PathFinder:
         return result
 
     @staticmethod
+    def dfs_util(graph, u, destinations, visited, path, result, best_dest):
+        vertices = graph.get_number_of_nodes()
+    
+        if best_dest[0] != -1: #Condition to check whether destination is already found or not.
+            return
+    
+        if visited[u] == 0:
+            visited[u] = 1
+            result.visited_count += 1
+        
+        if u in destinations:
+            best_dest[0] = u
+            result.distance = len(path) - 1
+            result.path = path
+            return
+        
+        for i in range(vertices):
+            weight = graph.get_edge_weight(u, i)
+            if weight != 0 and weight != INT_MAX and visited[i] == 0:
+                new_path = list(path)
+                new_path.append(i)
+                PathFinder.dfs_util(graph, i, destinations, visited, new_path, result, best_dest)
+
+
+    @staticmethod
     def find_path_dfs(graph, source, destinations):
         result = PathResult()
         vertices = graph.get_number_of_nodes()
-        
+    
         visited = []
         for i in range(vertices):
-            visited.append(False)
-        
-        stack = []
-        initial_path = []
-        initial_path.append(source)
-        stack.append((source, initial_path))
-        
-        best_dest = -1
-        while len(stack) > 0:
-            item = stack.pop()
-            u = item[0]
-            path = item[1]
+            visited.append(0)
             
-            if visited[u] == False:
-                visited[u] = True
-                result.visited_count += 1
-                if u in destinations:
-                    best_dest = u
-                    result.distance = len(path) - 1
-                    result.path = path
-                    break
-                
-                # Push unvisited neighbors
-                for i in range(vertices):
-                    weight = graph.get_edge_weight(u, i)
-                    if weight != 0 and weight != INT_MAX and visited[i] == False:
-                        new_path = list(path)
-                        new_path.append(i)
-                        stack.append((i, new_path))
-                        
-        if best_dest != -1:
-            result.destination_node = best_dest
+        best_dest = [-1]
+    
+    
+        PathFinder.dfs_util(graph, source, destinations, visited, [source], result, best_dest)
+            
+        if best_dest[0] != -1:
+            result.destination_node = best_dest[0]
             
         return result
 
+
+# Answers how far is every room from a particular point.
     @staticmethod
     def get_all_distances(graph, source):
         vertices = graph.get_number_of_nodes()
